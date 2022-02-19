@@ -1,0 +1,152 @@
+{
+  "address": "0x7d9EE886051cC918aE76a4169CC1540E1ed1E4d6",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract ITransactionManager",
+          "name": "_txMgrAddr",
+          "type": "address"
+        }
+      ],
+      "name": "init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x7a859c7c8b06c8b6c94bfb09b6a790e082f45e8ae3ff6a52091808ce243c2d9a",
+  "receipt": {
+    "to": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+    "from": "0xCB1e9fA11Edd27098A6B2Ff23cB6b79183ccf8Ee",
+    "contractAddress": null,
+    "transactionIndex": 15,
+    "gasUsed": "131724",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x58c7344ea0cf26ebce09d271c14ff81910ef3d60e9974db396674f8d1b43a7b6",
+    "transactionHash": "0x7a859c7c8b06c8b6c94bfb09b6a790e082f45e8ae3ff6a52091808ce243c2d9a",
+    "logs": [],
+    "blockNumber": 18584830,
+    "cumulativeGasUsed": "4614520",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "0afe9d71136b27bba4376c61e34b7e04",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract ITransactionManager\",\"name\":\"_txMgrAddr\",\"type\":\"address\"}],\"name\":\"init\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/UpgradeInit/NXTPInit.sol\":\"NXTPInit\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"src/Interfaces/IHopBridge.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.7;\\n\\ninterface IHopBridge {\\n    struct BridgeConfig {\\n        address token;\\n        address hToken;\\n        address bridge;\\n    }\\n\\n    function sendToL2(\\n        uint256 chainId,\\n        address recipient,\\n        uint256 amount,\\n        uint256 amountOutMin,\\n        uint256 deadline,\\n        address relayer,\\n        uint256 relayerFee\\n    ) external payable;\\n\\n    function send(\\n        uint256 chainId,\\n        address recipient,\\n        uint256 amount,\\n        uint256 relayerFee,\\n        uint256 amountOutMin,\\n        uint256 deadline\\n    ) external;\\n}\\n\",\"keccak256\":\"0xe6d20c22e4f9d46b858990955e6e279c022c3f9c35ccbc415db488a15c6e52bf\",\"license\":\"MIT\"},\"src/Interfaces/ITransactionManager.sol\":{\"content\":\"// SPDX-License-Identifier: UNLICENSED\\npragma solidity 0.8.7;\\n\\ninterface ITransactionManager {\\n    // Structs\\n\\n    // Holds all data that is constant between sending and\\n    // receiving chains. The hash of this is what gets signed\\n    // to ensure the signature can be used on both chains.\\n    struct InvariantTransactionData {\\n        address receivingChainTxManagerAddress;\\n        address user;\\n        address router;\\n        address initiator; // msg.sender of sending side\\n        address sendingAssetId;\\n        address receivingAssetId;\\n        address sendingChainFallback; // funds sent here on cancel\\n        address receivingAddress;\\n        address callTo;\\n        uint256 sendingChainId;\\n        uint256 receivingChainId;\\n        bytes32 callDataHash; // hashed to prevent free option\\n        bytes32 transactionId;\\n    }\\n\\n    // Holds all data that varies between sending and receiving\\n    // chains. The hash of this is stored onchain to ensure the\\n    // information passed in is valid.\\n    struct VariantTransactionData {\\n        uint256 amount;\\n        uint256 expiry;\\n        uint256 preparedBlockNumber;\\n    }\\n\\n    // All Transaction data, constant and variable\\n    struct TransactionData {\\n        address receivingChainTxManagerAddress;\\n        address user;\\n        address router;\\n        address initiator; // msg.sender of sending side\\n        address sendingAssetId;\\n        address receivingAssetId;\\n        address sendingChainFallback;\\n        address receivingAddress;\\n        address callTo;\\n        bytes32 callDataHash;\\n        bytes32 transactionId;\\n        uint256 sendingChainId;\\n        uint256 receivingChainId;\\n        uint256 amount;\\n        uint256 expiry;\\n        uint256 preparedBlockNumber; // Needed for removal of active blocks on fulfill/cancel\\n    }\\n\\n    // The structure of the signed data for fulfill\\n    struct SignedFulfillData {\\n        bytes32 transactionId;\\n        uint256 relayerFee;\\n        string functionIdentifier; // \\\"fulfill\\\" or \\\"cancel\\\"\\n        uint256 receivingChainId; // For domain separation\\n        address receivingChainTxManagerAddress; // For domain separation\\n    }\\n\\n    // The structure of the signed data for cancellation\\n    struct SignedCancelData {\\n        bytes32 transactionId;\\n        string functionIdentifier;\\n        uint256 receivingChainId;\\n        address receivingChainTxManagerAddress; // For domain separation\\n    }\\n\\n    /**\\n     * Arguments for calling prepare()\\n     * @param invariantData The data for a crosschain transaction that will\\n     *                      not change between sending and receiving chains.\\n     *                      The hash of this data is used as the key to store\\n     *                      the inforamtion that does change between chains\\n     *                      (amount,expiry,preparedBlock) for verification\\n     * @param amount The amount of the transaction on this chain\\n     * @param expiry The block.timestamp when the transaction will no longer be\\n     *               fulfillable and is freely cancellable on this chain\\n     * @param encryptedCallData The calldata to be executed when the tx is\\n     *                          fulfilled. Used in the function to allow the user\\n     *                          to reconstruct the tx from events. Hash is stored\\n     *                          onchain to prevent shenanigans.\\n     * @param encodedBid The encoded bid that was accepted by the user for this\\n     *                   crosschain transfer. It is supplied as a param to the\\n     *                   function but is only used in event emission\\n     * @param bidSignature The signature of the bidder on the encoded bid for\\n     *                     this transaction. Only used within the function for\\n     *                     event emission. The validity of the bid and\\n     *                     bidSignature are enforced offchain\\n     * @param encodedMeta The meta for the function\\n     */\\n    struct PrepareArgs {\\n        InvariantTransactionData invariantData;\\n        uint256 amount;\\n        uint256 expiry;\\n        bytes encryptedCallData;\\n        bytes encodedBid;\\n        bytes bidSignature;\\n        bytes encodedMeta;\\n    }\\n\\n    /**\\n     * @param txData All of the data (invariant and variant) for a crosschain\\n     *               transaction. The variant data provided is checked against\\n     *               what was stored when the `prepare` function was called.\\n     * @param relayerFee The fee that should go to the relayer when they are\\n     *                   calling the function on the receiving chain for the user\\n     * @param signature The users signature on the transaction id + fee that\\n     *                  can be used by the router to unlock the transaction on\\n     *                  the sending chain\\n     * @param callData The calldata to be sent to and executed by the\\n     *                 `FulfillHelper`\\n     * @param encodedMeta The meta for the function\\n     */\\n    struct FulfillArgs {\\n        TransactionData txData;\\n        uint256 relayerFee;\\n        bytes signature;\\n        bytes callData;\\n        bytes encodedMeta;\\n    }\\n\\n    /**\\n     * Arguments for calling cancel()\\n     * @param txData All of the data (invariant and variant) for a crosschain\\n     *               transaction. The variant data provided is checked against\\n     *               what was stored when the `prepare` function was called.\\n     * @param signature The user's signature that allows a transaction to be\\n     *                  cancelled by a relayer\\n     * @param encodedMeta The meta for the function\\n     */\\n    struct CancelArgs {\\n        TransactionData txData;\\n        bytes signature;\\n        bytes encodedMeta;\\n    }\\n\\n    // Adding/removing asset events\\n    event RouterAdded(address indexed addedRouter, address indexed caller);\\n\\n    event RouterRemoved(address indexed removedRouter, address indexed caller);\\n\\n    // Adding/removing router events\\n    event AssetAdded(address indexed addedAssetId, address indexed caller);\\n\\n    event AssetRemoved(address indexed removedAssetId, address indexed caller);\\n\\n    // Liquidity events\\n    event LiquidityAdded(address indexed router, address indexed assetId, uint256 amount, address caller);\\n\\n    event LiquidityRemoved(address indexed router, address indexed assetId, uint256 amount, address recipient);\\n\\n    // Transaction events\\n    event TransactionPrepared(\\n        address indexed user,\\n        address indexed router,\\n        bytes32 indexed transactionId,\\n        TransactionData txData,\\n        address caller,\\n        PrepareArgs args\\n    );\\n\\n    event TransactionFulfilled(\\n        address indexed user,\\n        address indexed router,\\n        bytes32 indexed transactionId,\\n        FulfillArgs args,\\n        bool success,\\n        bool isContract,\\n        bytes returnData,\\n        address caller\\n    );\\n\\n    event TransactionCancelled(\\n        address indexed user,\\n        address indexed router,\\n        bytes32 indexed transactionId,\\n        CancelArgs args,\\n        address caller\\n    );\\n\\n    // Getters\\n    function getChainId() external view returns (uint256);\\n\\n    function getStoredChainId() external view returns (uint256);\\n\\n    // Owner only methods\\n    function addRouter(address router) external;\\n\\n    function removeRouter(address router) external;\\n\\n    function addAssetId(address assetId) external;\\n\\n    function removeAssetId(address assetId) external;\\n\\n    // Router only methods\\n    function addLiquidityFor(\\n        uint256 amount,\\n        address assetId,\\n        address router\\n    ) external payable;\\n\\n    function addLiquidity(uint256 amount, address assetId) external payable;\\n\\n    function removeLiquidity(\\n        uint256 amount,\\n        address assetId,\\n        address payable recipient\\n    ) external;\\n\\n    // Methods for crosschain transfers\\n    // called in the following order (in happy case)\\n    // 1. prepare by user on sending chain\\n    // 2. prepare by router on receiving chain\\n    // 3. fulfill by user on receiving chain\\n    // 4. fulfill by router on sending chain\\n    function prepare(PrepareArgs calldata args) external payable returns (TransactionData memory);\\n\\n    function fulfill(FulfillArgs calldata args) external returns (TransactionData memory);\\n\\n    function cancel(CancelArgs calldata args) external returns (TransactionData memory);\\n}\\n\",\"keccak256\":\"0xbf46be449c1ae9465c5d464cd102b1ac4ee038bfe20c693f3f5a9775a368b1b9\",\"license\":\"UNLICENSED\"},\"src/Libraries/AppStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.7;\\n\\nimport { ITransactionManager } from \\\"../Interfaces/ITransactionManager.sol\\\";\\nimport { IHopBridge } from \\\"../Interfaces/IHopBridge.sol\\\";\\n\\nstruct AppStorage {\\n    ITransactionManager nxtpTxManager;\\n    mapping(string => IHopBridge.BridgeConfig) hopBridges;\\n    uint256 hopChainId;\\n    // Only add new variables *BELOW* the last variable\\n}\\n\",\"keccak256\":\"0xd8c2889e0a5e6e70ffe1228f397f6b0d3a8e6b08fc60209481be8478812f9bef\",\"license\":\"MIT\"},\"src/UpgradeInit/NXTPInit.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.7;\\n\\nimport { AppStorage } from \\\"../Libraries/AppStorage.sol\\\";\\nimport { ITransactionManager } from \\\"../Interfaces/ITransactionManager.sol\\\";\\n\\ncontract NXTPInit {\\n    AppStorage internal s;\\n\\n    function init(ITransactionManager _txMgrAddr) external {\\n        s.nxtpTxManager = _txMgrAddr;\\n    }\\n}\\n\",\"keccak256\":\"0xf1e7185a0b1cfafa1acfb7189cf2f8390269f24b8652e9222eb4744b2fa4bfa4\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5061016a806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c806319ab453c14610030575b600080fd5b61004a600480360381019061004591906100a7565b61004c565b005b806000800160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b6000813590506100a18161011d565b92915050565b6000602082840312156100bd576100bc610118565b5b60006100cb84828501610092565b91505092915050565b60006100df826100f8565b9050919050565b60006100f1826100d4565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600080fd5b610126816100e6565b811461013157600080fd5b5056fea2646970667358221220f7b93debd5a9687aa3a37a338157c87ad58bfbd7a0501340a958305598d915a564736f6c63430008070033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061002b5760003560e01c806319ab453c14610030575b600080fd5b61004a600480360381019061004591906100a7565b61004c565b005b806000800160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b6000813590506100a18161011d565b92915050565b6000602082840312156100bd576100bc610118565b5b60006100cb84828501610092565b91505092915050565b60006100df826100f8565b9050919050565b60006100f1826100d4565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600080fd5b610126816100e6565b811461013157600080fd5b5056fea2646970667358221220f7b93debd5a9687aa3a37a338157c87ad58bfbd7a0501340a958305598d915a564736f6c63430008070033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 3258,
+        "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+        "label": "s",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_struct(AppStorage)2406_storage"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_contract(ITransactionManager)2389": {
+        "encoding": "inplace",
+        "label": "contract ITransactionManager",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_string_memory_ptr,t_struct(BridgeConfig)2004_storage)": {
+        "encoding": "mapping",
+        "key": "t_string_memory_ptr",
+        "label": "mapping(string => struct IHopBridge.BridgeConfig)",
+        "numberOfBytes": "32",
+        "value": "t_struct(BridgeConfig)2004_storage"
+      },
+      "t_string_memory_ptr": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(AppStorage)2406_storage": {
+        "encoding": "inplace",
+        "label": "struct AppStorage",
+        "members": [
+          {
+            "astId": 2398,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "nxtpTxManager",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(ITransactionManager)2389"
+          },
+          {
+            "astId": 2403,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "hopBridges",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_string_memory_ptr,t_struct(BridgeConfig)2004_storage)"
+          },
+          {
+            "astId": 2405,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "hopChainId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_struct(BridgeConfig)2004_storage": {
+        "encoding": "inplace",
+        "label": "struct IHopBridge.BridgeConfig",
+        "members": [
+          {
+            "astId": 1999,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "token",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 2001,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "hToken",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "astId": 2003,
+            "contract": "src/UpgradeInit/NXTPInit.sol:NXTPInit",
+            "label": "bridge",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
